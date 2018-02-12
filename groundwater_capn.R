@@ -5,6 +5,8 @@
 ######################################################################################
 install.packages("capn") #only need to run if you have not already installed capn
 install.packages("ggplot2") #only need to run if you have not already installed ggplot
+install.packages("R.oo") #this supports repmis. repmis should install it, but some students 
+                          #have had install it manually.  
 install.packages("repmis")
 library(capn) #https://cran.r-project.org/web/packages/capn/capn.pdf 
 library(ggplot2)
