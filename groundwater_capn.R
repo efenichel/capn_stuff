@@ -3,17 +3,19 @@
 # Date: 12/30/2017
 # Reference: Fenichel et al. (2016) PNAS
 ######################################################################################
-install.packages("capn") #only need to run if you have not already installed capn
-install.packages("ggplot2") #only need to run if you have not already installed ggplot
-install.packages("R.oo") #this supports repmis. repmis should install it, but some students 
-                          #have had install it manually.  
-install.packages("repmis")
-library(capn) #https://cran.r-project.org/web/packages/capn/capn.pdf 
-library(ggplot2)
-library(repmis) #https://cran.r-project.org/web/packages/repmis/index.html 
-rm(list=ls())
 
-#get data set for the problem set
+#load required packages
+if (!require("pacman")) install.packages("pacman") #pacman allows you to use the p_load function
+#the p_load function checks is a library is installed, if not it installs it, then it attaches the 
+#called library
+p_load(capn, R.oo, repmis, ggplot2)
+
+#capn documentation: https://cran.r-project.org/web/packages/capn/capn.pdf 
+#repmis documentation: https://cran.r-project.org/web/packages/repmis/index.html 
+
+rm(list=ls()) #clear workspace
+
+#get data set for the problem set from Github
 source_data("https://github.com/efenichel/capn_stuff/raw/master/my_gw_data.RData")
                      
 #The elements of gw.data are
@@ -28,7 +30,12 @@ source_data("https://github.com/efenichel/capn_stuff/raw/master/my_gw_data.RData
 #Per acre prices (gross revenues) used in the profit function, element 8
 #Costs used in the profit function, element 9
 #Also included are the raw coefficients for the crop shares models (csp.raw) and their mean values csp.means.  
-
+##################################################################################################
+##################################################################################################
+##
+##  Modeling parameters to control   #############################################################
+##
+##################################################################################################
 #additional modeling parameters
 dr <- 0.03 #discount rate
 recharge <- 1.25 #inches per year constant rate
@@ -247,7 +254,7 @@ ggplot() +
     plot.background = element_rect(fill = "transparent",colour = NA)
   )
 
-
+cat("you may get an warning that some number or rows were removed from the plot. This is not important.", "\n")
 
 testme<-psim(pcoeff = pC, 
              stock = c(18.5,21.5), 
