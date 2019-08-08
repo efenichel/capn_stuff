@@ -1,0 +1,33 @@
+#R code to recreate the Fenichel and Abbott 2014 figure for Nick Hanley
+#Eli Fenichel, Yale University, August 2019
+
+rm(list = ls()) #clear memory
+#get libraries
+if (!require("pacman")) install.packages("pacman")
+p_load(capn, ggplot2, cowplot)
+
+
+#pull in Gulf of Mexico Data, which is included with capn library.
+#you will need to click through a few times. 
+demo("GOM")
+
+devAskNewPage(ask = FALSE) #turn off a pause feature in the demo
+
+#gets the data out of the demo results and organizes it for graphing in ggplot
+gom.out <- as.data.frame(cbind(GOMSimV$stock/1e6,  GOMSimV$shadowp, GOMSimV$vfun))
+colnames(gom.out)<-c("stock", "sp", "vfun")
+
+#plot just the accounting price in ggplot
+ggplot() +
+  geom_line(data = gom.out, aes(x = stock, y = sp),
+            color = 'black') +
+  labs(
+    x= "Fish stock, millions of pounds",
+    y = "Natural capital price, USD")  +
+  #xlim(0,25) +
+  ylim(0, 14)+
+  theme(  #http://ggplot2.tidyverse.org/reference/theme.html
+    axis.line = element_line(color = "black"), 
+    panel.background = element_rect(fill = "transparent",color = NA),
+    plot.background = element_rect(fill = "transparent",color = NA)
+  )
