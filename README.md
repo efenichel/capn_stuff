@@ -6,3 +6,5 @@ capN and groundwater exercise.pdf is the actual problem set.
 groundwater_capn.R is an R script students will need to do the problem set.
 my_gw_data.RData stored a dataset for the exercise, but groundwater_capn.R pulls this from Github automatically, so don't worry about it.
 
+I have also put code here that enable you to remake Figure 4 from Fenichel and Abbott 2014 JAERE. 
+
