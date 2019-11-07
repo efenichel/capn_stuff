@@ -9,7 +9,7 @@
 
 # Convert regression output and summary statistics into capn parameters -------------------------------------
 datasetup <- function(gmdnum, dataset = ksdata) {
-  region_data <- ksdata[[gmdnum]]
+  region_data <- dataset[[gmdnum]]
   # Region Specific Parameters ---------------------------------------------------
   #CASE 1: GMD 1-5
   if (gmdnum < 6) {
@@ -69,8 +69,8 @@ datasetup <- function(gmdnum, dataset = ksdata) {
   #CASE 2: GMD 6 Outgroup
   else if (gmdnum == 6){
     # Crop Choice Parameters Setup ------------------------------------------------
-    `mlogit.state.coeff` <- KSwater_data[[7]][[2]]
-    `mlogit.state.means` <- KSwater_data[[7]][[3]]
+    `mlogit.state.coeff` <- dataset[[7]][[2]]
+    `mlogit.state.means` <- dataset[[7]][[3]]
     mlogit.state.coeff   <- data.frame(mlogit.state.coeff[-c(1,24,25),], 
                                        stringsAsFactors = FALSE)
     mlogit.state.means   <- data.frame(mlogit.state.means[-c(22,23),], 
@@ -89,7 +89,7 @@ datasetup <- function(gmdnum, dataset = ksdata) {
     colnames(crop.coeff.state) <- c("alpha","beta")
     
     # Crop Amounts Parameter Setup ------------------------------------------------
-    `crop.amts.state` <- KSwater_data[[7]][[4]]
+    `crop.amts.state` <- dataset[[7]][[4]]
     crop.amts.state <- data.matrix(crop.amts.state[-c(1,8),-c(1)])
     crop.amts.state <- t(crop.amts.state)
     
