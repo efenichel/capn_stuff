@@ -9,7 +9,7 @@
 
 # Convert regression output and summary statistics into capn parameters -------------------------------------
 datasetup <- function(gmdnum, dataset = ksdata) {
-  region_data <- ksdata
+  region_data <- ksdata[[gmdnum]]
   # Region Specific Parameters ---------------------------------------------------
   #CASE 1: GMD 1-5
   if (gmdnum < 6) {
