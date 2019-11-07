@@ -19,7 +19,7 @@ gitbranch <- "bygmd"
 #get data set for the problem set from Github
 source_data("https://github.com/efenichel/capn_stuff/raw/master/my_gw_data.RData")
 
-ksdata <- source_data("https://github.com/eaddicott/capn_stuff/raw/master/KSwater_data.RData") #Rdata file upload
+ksdata <- source_data(paste0("https://github.com/efenichel/capn_stuff/raw/",gitbranch,"/KSwater_data.RData")) #Rdata file upload
 #str(ksdata) # this line will show you the structure of the data
 
 ## STRUCTURE INFO
