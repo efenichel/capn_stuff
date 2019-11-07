@@ -44,7 +44,6 @@ ksdata <-readRDS(gzcon(url(paste0("https://github.com/efenichel/capn_stuff/raw/"
 if (!exists("datasetup", mode = "function")) { #only source if not exist
 source(paste0("https://github.com/efenichel/capn_stuff/raw/",gitbranch,"/data_setup.R"))
 }
-
 #The elements of gw.data are
 #The parameters from the multinomial logit for crop shares, 
 #to know which is which see the labels on the additional csp.means data using the View(csp.means) command.
@@ -88,7 +87,7 @@ wmax <- region_data[[11]]
 #source('system_fns.R')  
 #source a separate script from github that contains the functions for gw system
 if (!exists("cropFwater", mode = "function")) { #only sources if doesn't exist
-source(paste0("https://raw.githubusercontent.com/efenichel/capn_stuff/",gitbranch,"forspi/system_fns.R") #will need to fix in the end
+source(paste0("https://raw.githubusercontent.com/efenichel/capn_stuff/",gitbranch,"forspi/system_fns.R")) #will need to fix in the end
 }
 #notice in the explore tab there are now a bunch of Functions.
 #you can click on any function and see the functions that support the system model.
