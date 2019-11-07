@@ -19,7 +19,7 @@ gitbranch <- "bygmd"
 #get data set for the problem set from Github
 source_data("https://github.com/efenichel/capn_stuff/raw/master/my_gw_data.RData")
 
-ksdata <-readRDS(gzcon(url(paste0("https://github.com/efenichel/capn_stuff/raw/",gitbranch,"forspi/KSwater_data.RDS")))) #RDS upload
+ksdata <-readRDS(gzcon(url(paste0("https://github.com/efenichel/capn_stuff/raw/",gitbranch,"/KSwater_data.RDS")))) #RDS upload
 #ksdata <- source_data("https://github.com/eaddicott/capn_stuff/raw/master/KSwater_data.RData") #Rdata file upload
 #str(ksdata) # this line will show you the structure of the data
 
@@ -87,7 +87,7 @@ wmax <- region_data[[11]]
 #source('system_fns.R')  
 #source a separate script from github that contains the functions for gw system
 if (!exists("cropFwater", mode = "function")) { #only sources if doesn't exist
-source(paste0("https://raw.githubusercontent.com/efenichel/capn_stuff/",gitbranch,"forspi/system_fns.R")) #will need to fix in the end
+source(paste0("https://raw.githubusercontent.com/efenichel/capn_stuff/",gitbranch,"/system_fns.R")) #will need to fix in the end
 }
 #notice in the explore tab there are now a bunch of Functions.
 #you can click on any function and see the functions that support the system model.
