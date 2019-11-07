@@ -3,12 +3,13 @@
 # Date: 12/30/2017
 # Reference: Fenichel et al. (2016) PNAS
 ######################################################################################
-
+## troubleshooting branch
+gitbranch <- "bygmd"
 #load required packages
 if (!require("pacman")) install.packages("pacman") #pacman allows you to use the p_load function
 #the p_load function checks is a library is installed, if not it installs it, then it attaches the 
 #called library
-p_load(capn, R.oo, repmis, ggplot2, RCurl)
+p_load(capn, R.oo, repmis, ggplot2, devtools, RCurl)
 
 #capn documentation: https://cran.r-project.org/web/packages/capn/capn.pdf 
 #repmis documentation: https://cran.r-project.org/web/packages/repmis/index.html 
@@ -18,10 +19,31 @@ rm(list=ls()) #clear workspace
 #get data set for the problem set from Github
 source_data("https://github.com/efenichel/capn_stuff/raw/master/my_gw_data.RData")
 
+ksdata <-readRDS(gzcon(url(paste0("https://github.com/efenichel/capn_stuff/raw/",gitbranch,"forspi/KSwater_data.RDS")))) #RDS upload
+#ksdata <- source_data("https://github.com/eaddicott/capn_stuff/raw/master/KSwater_data.RData") #Rdata file upload
+#str(ksdata) # this line will show you the structure of the data
 
-ksdata <-readRDS(gzcon(url("https://github.com/efenichel/capn_stuff/raw/forspi/KSwater_data.RDS")))
+## STRUCTURE INFO
+#The object will be a list of 7 lists. Each of the 7 lists corresponds to a groundwater management district (1-5), 
+# the outgroup(6), or the entire state of Kansas(7).
+# Each list will have 11 named elements:
+# [1] $gmdnum: int   1:7
+# [2] $mlogitcoeff: df with dim = (#cropcodes x 23) containing the coefficients and intercept terms from the multinomial logit model
+# [3] $mlogitmeans: df containing the mean for each of the variables run in the mlogit model
+# [4] $cropamts: df containing the mean acres planted to each of the 5 crop cover types for each cropcode
+# [5] $watercoeff: df containing the water withdrawal regression coefficients and intercept
+# [6] $wwdmeans: df containing the means for each of the variables in the water withdrawal regression
+# [7] $costcropacre: df dim=(1x5) containing the cost per acre of planting each of the 5 crops
+# [8] $cropprices: df dim=(5x1) containing the per unit prices of each of the crops
+# [9] $meanwater: num mean AF water in the region of interest
+# [10]$recharge: num recharge rate for the region of interest
+# [11]$watermax: num upper bound of domain for node space, max water observed in region.
 
-datasetup(2)
+#load datasetup function
+#source a separate script from github that contains the functions for gw system
+if (!exists("datasetup", mode = "function")) { #only source if not exist
+source(paste0("https://github.com/efenichel/capn_stuff/raw/",gitbranch,"/data_setup.R"))
+}
 
 #The elements of gw.data are
 #The parameters from the multinomial logit for crop shares, 
@@ -41,21 +63,33 @@ datasetup(2)
 ##  Modeling parameters to control   #############################################################
 ##
 ##################################################################################################
-#additional modeling parameters
+###
+region <- 6 # Select region,  1:5 are GMD, 6 is outgroup, 7 is state
+###
+# After setting the region, create capn data structure
+
+region_data <- ksdata[[region]] #double-brackets here important. Load in region specific data
+gw.data <- datasetup(region) # if running line by line, be sure to run this function at the bottom of this script
+#Economic parameters
 dr <- 0.03 #discount rate
-recharge <- 1.25 #inches per year constant rate
+
+#System parameters
+recharge <- region_data[[10]] #units are inches per year constant rate 
+#recharge <- 1.25 uncomment to input your own for sensitivity analysis
 
 #capN parameters
 order <- 10 # approximaton order
 NumNodes <- 100 #number of nodes
+wmax <- region_data[[11]]
 
 #####################################################################
 # Get the system model associated with Fenichel et al. 2016
 # First load the functions 
 #source('system_fns.R')  
-
-source("https://raw.githubusercontent.com/efenichel/capn_stuff/forspi/system_fns.R") #will need to fix in the end
-
+#source a separate script from github that contains the functions for gw system
+if (!exists("cropFwater", mode = "function")) { #only sources if doesn't exist
+source(paste0("https://raw.githubusercontent.com/efenichel/capn_stuff/",gitbranch,"forspi/system_fns.R") #will need to fix in the end
+}
 #notice in the explore tab there are now a bunch of Functions.
 #you can click on any function and see the functions that support the system model.
 #These are the functions that you need to build and calibrate for your system.
@@ -70,8 +104,8 @@ source("https://raw.githubusercontent.com/efenichel/capn_stuff/forspi/system_fns
 #Prepare {capn}
 
 #prepare capN
-Aspace <- aproxdef(order,0,116,dr) #defines the approximation space
-nodes <- chebnodegen(NumNodes,0,116) #define the nodes
+Aspace <- aproxdef(order,0,wmax,dr) #defines the approximation space
+nodes <- chebnodegen(NumNodes,0,wmax) #define the nodes
 
 #prepare for simulation
 simuData <- matrix(0,nrow = NumNodes, ncol = 5)
