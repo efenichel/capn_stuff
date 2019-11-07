@@ -63,10 +63,10 @@ source(paste0("https://github.com/efenichel/capn_stuff/raw/",gitbranch,"/data_se
 ##
 ##################################################################################################
 ###
-region <- 6 # Select region,  1:5 are GMD, 6 is outgroup, 7 is state
+#region <- 1 # Select region,  1:5 are GMD, 6 is outgroup, 7 is state
 ###
 # After setting the region, create capn data structure
-
+if (!exists("region")){region <- 7} #default to state
 region_data <- ksdata[[region]] #double-brackets here important. Load in region specific data
 gw.data <- datasetup(region) # if running line by line, be sure to run this function at the bottom of this script
 #Economic parameters
