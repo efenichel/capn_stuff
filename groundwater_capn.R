@@ -1,7 +1,8 @@
 ######################################################################################
-# {capn} data: Kansas groundwater (gW.data) data
-# Date: 12/30/2017
-# Reference: Fenichel et al. (2016) PNAS
+# This script is a demo for the capn package that reproduces results from applications 
+# to groundwater in Kansas. 
+# Date: 11/07/2019
+# References: Fenichel et al. (2016) PNAS and Addicott & Fenichel (2019) JEEM
 ######################################################################################
 
 #load required packages
@@ -19,7 +20,8 @@ gitbranch <- "bygmd"
 #get data set for the problem set from Github
 source_data("https://github.com/efenichel/capn_stuff/raw/master/my_gw_data.RData")
 
-ksdata <- source_data(paste0("https://github.com/efenichel/capn_stuff/raw/",gitbranch,"/KSwater_data.RData")) #Rdata file upload
+ksdata <-readRDS(gzcon(url(paste0("https://github.com/efenichel/capn_stuff/raw/",gitbranch,"/KSwater_data.RDS")))) #RDS upload
+#ksdata <- source_data("https://github.com/eaddicott/capn_stuff/raw/master/KSwater_data.RData") #Rdata file upload
 #str(ksdata) # this line will show you the structure of the data
 
 ## STRUCTURE INFO
@@ -67,18 +69,19 @@ source(paste0("https://github.com/efenichel/capn_stuff/raw/",gitbranch,"/data_se
 # After setting the region, create capn data structure
 if (!exists("region")){region <- 7} #default to state
 region_data <- ksdata[[region]] #double-brackets here important. Load in region specific data
-gw.data <- datasetup(region) # if running line by line, be sure to run this function at the bottom of this script
+gw.data <- datasetup(region) 
+
 #Economic parameters
 dr <- 0.03 #discount rate
 
 #System parameters
-recharge <- region_data[[10]] #units are inches per year constant rate 
+recharge <- region_data[['recharge']] #units are inches per year constant rate, see line 39 
 #recharge <- 1.25 uncomment to input your own for sensitivity analysis
 
 #capN parameters
 order <- 10 # approximaton order
 NumNodes <- 100 #number of nodes
-wmax <- region_data[[11]]
+wmax <- region_data[['watermax']]  #see line 40 
 
 #####################################################################
 # Get the system model associated with Fenichel et al. 2016
@@ -141,10 +144,10 @@ ggplot() +
               panel.background = element_rect(fill = "transparent",colour = NA),
               plot.background = element_rect(fill = "transparent",colour = NA)
             )
-cat("if everything runs well the next line should say 16.82325", "\n")
+cat("if everything runs well the next line should say 17.44581", "\n")
 cat("At 21.5 acre feet of water, the shadow price is" , psim(pC,21.5)$shadowp, "\n")
 
-#use ggplot plot the value function
+# use ggplot plot the value function
 ggplot() + 
   geom_line(data = waterSim[5:100,], aes(x = stock[5:100], y = vfun[5:100]),
             # four rows are removed because they are two far outside the data

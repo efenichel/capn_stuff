@@ -17,12 +17,18 @@ datasetup <- function(gmdnum, dataset = ksdata) {
     `mlogit.gmd.coeff` <- region_data[[2]]
     `mlogit.gmd.means` <- region_data[[3]]
     
+    #get parameter estimates from an mlogit regression
     mlogit.gmd.coeff   <- data.frame(mlogit.gmd.coeff[-c(1,24,25),], 
                                      stringsAsFactors = FALSE)
+    
+    #get the summary statistics means associated with the variables that go into that
+    #mlogit regression. 
     mlogit.gmd.means   <- data.frame(mlogit.gmd.means[-c(22,23), gmdnum + 1], 
                                      stringsAsFactors = FALSE)
     
     # Transpose betas, chop off variable names to create crop.coeff column
+    #collapse everything but the coefficent associate with means except the \beta associated
+    #with water withdrawl.
     crop.gmd.betas     <- t(mlogit.gmd.coeff[1,-c(1,ncol(mlogit.gmd.coeff))])
     crop.gmd.alphas    <- rep(NA, ncol(mlogit.gmd.coeff) - 2)
     crop.mean.vector <- append(as.numeric(unlist(mlogit.gmd.means[-c(1),])), 1)
@@ -45,19 +51,24 @@ datasetup <- function(gmdnum, dataset = ksdata) {
       stop("BAD LENGTH")
     }
     # Water Withdrawal Parameter Setup --------------------------------------------
+    #uses regression of water.drawl (log acre feet) ~ F(stuff, water.depth)
+    #also read in RMSE. 
     `water.coeff` <- region_data[[5]]
     rmse <- as.numeric(water.coeff[36,2])
     water.coeff <- data.frame(water.coeff[-c(1,34:37),] ,stringsAsFactors = FALSE)
     
     # Beta ------------------------------------------------------------------------
+    #get the coefficent for water depth
     beta <- as.numeric(water.coeff[21,2])
     
     # Gamma -----------------------------------------------------------------------
+    #get crop and crop^2 coefficents
     gamma <- as.numeric(water.coeff[c(1:10),2])
     gamma1 <- gamma[c(1,3,5,7,9)]
     gamma2 <- gamma[c(2,4,6,8,10)]
     
     # Alpha -----------------------------------------------------------------------
+    #all else evaluated at means, with RMSE adjustment for log specification. 
     alpha.water.coeff <- water.coeff[-c(1:11,21),2]
     `wwd.means` <- region_data[[6]]
     wwd.means <- data.frame(wwd.means[-c(1,11,22,23),gmdnum + 2], stringsAsFactors = FALSE)
@@ -66,7 +77,7 @@ datasetup <- function(gmdnum, dataset = ksdata) {
     alpha <- alpha + (rmse**2)/2 #correction for log estimation
     alpha <- as.vector(alpha, mode = "numeric")
   }
-  #CASE 2: GMD 6 Outgroup
+  #CASE 2: GMD 6 Outgroup (uses state crop choice model for the outgroup)
   else if (gmdnum == 6){
     # Crop Choice Parameters Setup ------------------------------------------------
     `mlogit.state.coeff` <- dataset[[7]][[2]]
@@ -120,7 +131,7 @@ datasetup <- function(gmdnum, dataset = ksdata) {
     alpha <- alpha + (rmse**2)/2 #correction for log estimation
     alpha <- as.vector(alpha, mode = "numeric")
   }
-  #CASE 3: STATE
+  #CASE 3: STATE (this is the statewide code)
   else if (gmdnum == 7){
     # Crop Choice Parameters Setup ------------------------------------------------
     `mlogit.state.coeff` <- region_data[[2]]
