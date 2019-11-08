@@ -65,9 +65,10 @@ my.region <- 7
 # After setting the region, create capn data structure
 if (!exists("region")){region <- my.region} #default to state
 region_data <- ksdata[[region]] #double-brackets here important. Load in region specific data
-gw.data <- datasetup(region) 
+gw.data <- datasetup(region)  #note there is option data setup dataset. Default is ksdata, but this can be changed.
 #the gw.data data repackages parameters and means, see the datasetup code. 
-
+# the return is of the form 
+#list(crop.coeff, crop.amts, alpha, beta, gamma, gamma1, gamma2, crop.prices, cost.crop.acre)
 #---------------------------------------------------------------------------------------------
 
 # User specified parameters ---------------------------------------------------------------
