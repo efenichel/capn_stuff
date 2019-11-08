@@ -52,63 +52,45 @@ rm(KSwater_data) #this removes the redundant data set.
 # [10]$recharge: num recharge rate for the region of interest
 # [11]$watermax: num upper bound of domain for node space, max water observed in region.
 
-#old data
-source_data("https://github.com/efenichel/capn_stuff/raw/master/my_gw_data.RData")
-
 #----------------------------------------------------------------------------------------
 # Get "datasetup" function to process data 
 source(paste0("https://github.com/efenichel/capn_stuff/raw/",gitbranch,"/data_setup.R"))
 
-#The elements of gw.data are
-#The parameters from the multinomial logit for crop shares, 
-#to know which is which see the labels on the additional csp.means data using the View(csp.means) command.
-#The average amount planted in each field type defined by a wellhead 
-#A water withdraw constant, wwd.alpha, which is element 3
-#A water withdraw coefficient, wwd.beta, which is element 4
-#Water withdraw crop coefficients, wwd.gamma, which is element 5
-#Water withdraw crop coefficients main terms only, wwd.gamma.p1, which is element 6
-#Water withdraw crop coefficients squared terms only, wwd.gamma.p2, which is element 7
-#Per acre prices (gross revenues) used in the profit function, element 8
-#Costs used in the profit function, element 9
-#Also included are the raw coefficients for the crop shares models (csp.raw) and their mean values csp.means.  
-##################################################################################################
-##################################################################################################
-##
-##  Modeling parameters to control   #############################################################
-##
-##################################################################################################
-###
-#region <- 1 # Select region,  1:5 are GMD, 6 is outgroup, 7 is state
-###
+
+# Setup gwdata data ------------------------------------------------------------------------------
+#region <- 1 # Select region,  1:5 are GMD, 6 is the outgroup, 7 is state
+#set the region
+my.region <- 7
+
 # After setting the region, create capn data structure
-if (!exists("region")){region <- 7} #default to state
+if (!exists("region")){region <- my.region} #default to state
 region_data <- ksdata[[region]] #double-brackets here important. Load in region specific data
 gw.data <- datasetup(region) 
+#the gw.data data repackages parameters and means, see the datasetup code. 
 
-csp.means2 <- t(region_data[[3]][,2])
-colnames(csp.means2) <- t(region_data[[3]][,1])
-csp.raw2 <- region_data[[2]]
+#---------------------------------------------------------------------------------------------
+
+# User specified parameters ---------------------------------------------------------------
 
 #Economic parameters
 dr <- 0.03 #discount rate
 
 #System parameters
-recharge <- region_data[[10]] #units are inches per year constant rate, see line 39 
+recharge <- region_data[['recharge']] #units are inches per year constant rate, see line 52 
 #recharge <- 1.25 uncomment to input your own for sensitivity analysis
 
 #capN parameters
 order <- 10 # approximaton order
 NumNodes <- 100 #number of nodes
-wmax <- region_data[[11]]  #see line 40 
+wmax <- region_data[['watermax']]  #This sets the the upper bound on water amount to consider, see line 40 
 
-#####################################################################
-# Get the system model associated with Fenichel et al. 2016
+#------------------------------------------------------------------------------------------
+# Get the system model associated with Fenichel et al. 2016 and Addicott & Fenichel 2019
 # First load the functions 
 #source('system_fns.R')  
 #source a separate script from github that contains the functions for gw system
-if (!exists("cropFwater", mode = "function")) { #only sources if doesn't exist
 source(paste0("https://raw.githubusercontent.com/efenichel/capn_stuff/",gitbranch,"/system_fns.R")) #will need to fix in the end
-}
+
 #notice in the explore tab there are now a bunch of Functions.
 #you can click on any function and see the functions that support the system model.
 #These are the functions that you need to build and calibrate for your system.
@@ -166,10 +148,13 @@ cat("if everything runs well the next line should say 17.44581", "\n")
 cat("At 21.5 acre feet of water, the shadow price is" , psim(pC,21.5)$shadowp, "\n")
 
 # use ggplot plot the value function
+lrange <- 6 # the closest nodes to zero have some issues. 
 ggplot() + 
-  geom_line(data = waterSim[5:100,], aes(x = stock[5:100], y = vfun[5:100]),
+  geom_line(data = waterSim[lrange :100,], aes(x = stock[lrange :100], y = vfun[lrange :100]),
             # four rows are removed because they are two far outside the data
             color = 'blue') +
+  xlim(0, 120) +
+  ylim(0, 2600) +
   labs( 
     x= "Stored groundwater",
     y = "Intertemporial Welfare")  +
