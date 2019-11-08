@@ -16,7 +16,7 @@ p_load(capn, ggplot2, repmis)
 
 rm(list=ls()) #clear workspace
 ## troubleshooting branch
-gitbranch <- "forspi"
+gitbranch <- "master"
 
 #----------------------------------------------------------------------------------------
 # Get data from Github
