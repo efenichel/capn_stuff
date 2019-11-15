@@ -78,7 +78,7 @@ dr <- 0.03 #discount rate
 
 #System parameters
 recharge <- region_data[['recharge']] #units are inches per year constant rate, see line 52 
-#recharge <- 1.25 uncomment to input your own for sensitivity analysis
+#recharge <- 1.25 #uncomment to input your own for sensitivity analysis
 
 #capN parameters
 order <- 10 # approximaton order
