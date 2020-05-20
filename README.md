@@ -1,4 +1,7 @@
 # capn_stuff
+
+*** Note R 4.0 does not seem to be supporting necessary packages yet. Please keep using R 3.6.3 (as of 05-20-2020)
+
 this repo supports the capn package in R.
 This exercise pdf is designed for students with no experience in R, but who are familar with Fenichel et al. 2016 PNAS http://www.pnas.org/content/113/9/2382.short or with Addicott & Fenichel 2019 https://www.sciencedirect.com/science/article/pii/S0095069618302468
 
