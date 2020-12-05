@@ -7,6 +7,25 @@
 
 #------------------------------------------------------------------------------
 
+
+#Convert 2D list of strings into data matrix of numerics. 
+list2data <- function(inlist){
+  rows = dim(inlist)[1]
+  cols = dim(inlist)[2]
+  rlist = list
+  rlist = matrix(data =0, nrow = rows, ncol = cols)
+  for (s in 1:rows){
+    for (t in 1:cols){
+      rlist[[s,t]] <- as.numeric(inlist[[s,t]])
+    }
+  }
+  
+  return(rlist)
+}
+
+
+
+
 # Convert regression output and summary statistics into capn parameters -------------------------------------
 datasetup <- function(gmdnum, dataset = ksdata) {
   region_data <- dataset[[gmdnum]]
@@ -43,7 +62,8 @@ datasetup <- function(gmdnum, dataset = ksdata) {
     
     # Crop Amounts Parameter Setup ------------------------------------------------
     `crop.amts.gmd` <- region_data[[4]]
-    crop.amts.gmd <- data.matrix(crop.amts.gmd[-c(1,8),-c(1)])
+    #crop.amts.gmd <- data.matrix(crop.amts.gmd[-c(1,8),-c(1)])
+    crop.amts.gmd <- list2data(crop.amts.gmd[-c(1,8),-c(1)])
     crop.amts.gmd <- t(crop.amts.gmd)
     crop.amts.gmd <- transform(crop.amts.gmd, numeric)
     #Check that crop amounts are one more than 
@@ -101,7 +121,8 @@ datasetup <- function(gmdnum, dataset = ksdata) {
     
     # Crop Amounts Parameter Setup ------------------------------------------------
     `crop.amts.state` <- dataset[[7]][[4]]
-    crop.amts.state <- data.matrix(crop.amts.state[-c(1,8),-c(1)])
+    #crop.amts.state <- data.matrix(crop.amts.state[-c(1,8),-c(1)])
+    crop.amts.state <- list2data(crop.amts.state[-c(1,8),-c(1)])
     crop.amts.state <- t(crop.amts.state)
     
     #Check that crop amounts are one more than 
@@ -155,7 +176,8 @@ datasetup <- function(gmdnum, dataset = ksdata) {
     
     # Crop Amounts Parameter Setup ------------------------------------------------
     `crop.amts.state` <- region_data[[4]]
-    crop.amts.state <- data.matrix(crop.amts.state[-c(1,8),-c(1)])
+    #crop.amts.state <- data.matrix(crop.amts.state[-c(1,8),-c(1)])
+    crop.amts.state <- list2data(crop.amts.state[-c(1,8),-c(1)])
     crop.amts.state <- t(crop.amts.state)
     
     #Check that crop amounts are one more than 
