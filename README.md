@@ -9,3 +9,9 @@ All else needed is pulled automatically from Github, so you will need an interne
 
 I have also put code here that enable you to remake Figure 4 from Fenichel and Abbott 2014 JAERE using the built in demo. The data to reproduce that figure are included inside the capn package. 
 
+The reproduction code for 
+Maher, S.M.L., E. P. Fenichel, O. J. Schmitz, and Adamowicz W.L. 2020. "The Economics of ‘Conservation Debt’: A Natural Capital Approach to Revealed Valuation of Ecological Dynamics." Ecological Applications.
+https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/eap.2132 
+can be found in https://github.com/efenichel/caribou or https://github.com/sammaher2/caribou 
+This is a good example for a multi-stock application. 
+ 
