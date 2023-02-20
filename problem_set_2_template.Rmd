@@ -1,0 +1,316 @@
+---
+title: "Problem Set Two -- Understanding the Code"
+author: "Andie Creel"
+date: "February, 2023"
+output: pdf_document
+---
+
+This markdown is a modification of the PDF and R Script written by Eli Fenichel and Ethan Addicott in 2019. It takes you through the "understanding the code" section.
+
+# Introduction 
+
+The results from Fenichel et al. 2016 PNAS and the state‐wide results from Addicott & Fenichel 2019 JEEM can be reproduced using capn. There is a slight difference between to the two results because of some additional data cleaning. We now use the data associated with Addicott & Fenichel. The necessary data file to download is groundwater_capn.R.
+
+Install R and RStudio, instructions are here https://www.rstudio.com/products/rstudio/download/, if you have not done so already.
+
+
+# Understanding the Code 
+The following code is from groundwater_capn.R. We will run through it step by step to understand the code and verify the package CAPn is installed correctly. I have taken the notes from "understanding the code" in the pdf and pasted throughout. 
+
+First, we will load packages. 
+
+```{r}
+#-------------------------------------------------------------------------------
+# This script is a demo for the capn package that reproduces results from applications 
+# to groundwater in Kansas. 
+# Oringally Written: 11/07/2019
+# References: Fenichel et al. (2016) PNAS and Addicott & Fenichel (2019) JEEM
+
+# Edited by Andie Creel: 2/20/2023
+#-------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------------
+# load required packages
+# pacman allows you to use the p_load function
+# the p_load function checks is a library is installed, if not it installs it, then it attaches the 
+# capn documentation: https://cran.r-project.org/web/packages/capn/capn.pdf 
+# repmis documentation: https://www.rdocumentation.org/packages/repmis/versions/0.5 
+# ggplot2 is a plotting package
+#-------------------------------------------------------------------------------
+
+if (!require("pacman")) install.packages("pacman") 
+p_load(capn, ggplot2, repmis)
+
+#clear workspace
+rm(list=ls()) 
+
+# a github branch is the online version of a project that we will want to refer to
+gitbranch <- "master" 
+```
+
+Next, we will get the data. 
+
+```{r}
+#----------------------------------------------------------------------------------------
+# Get data from Github
+#
+# This demo now  data from Addicott and Fenichel 2019 JEEM rather than the original data from
+# Fenichel et al. 2016 PNAS.  The is allows spatial disaggregration.  The change in data does lead
+# to slightly different results because of additional data cleaning.  Both results at the state-wide
+# level lead to shadow price for of the mean acre foot of water of ~$17. 
+
+# One advantage of this, is we provide code to process the raw regression results and 
+# raw summary statistics. 
+#----------------------------------------------------------------------------------------
+
+# Reading in many data objects from online github repository 
+source_data(paste0("https://github.com/efenichel/capn_stuff/raw/",gitbranch,"/KSwater_data.RData")) 
+
+# Load KSwater_data as ksdata 
+ksdata <- KSwater_data 
+
+# Remove the redundant data set. 
+rm(KSwater_data) 
+```
+
+In the Global Environment you will see ksdata appear under data. Click on this data structure. You will see it is actually many data structures. One for each groundwater management district (GMD_), and Outgroup, and State. We will focus on State. If you click State you will see state is gmdnum 7. There are number of dataframes and variables associated with a state wide analysis. These include coefficients from a multinomial logit regression and the selection model regression model mentioned in the papers. Also the means for the data are there, as are crop prices, planting costs and other necessary data.
+
+The data structure is explained in the following code chunk.
+
+```{r}
+
+# STRUCTURE of ksdata 
+# Note: df means dataframe, num means number and int means integer
+
+# The object ksdata is a list of 7 lists. Each of the 7 lists corresponds to a groundwater management district (1-5), 
+# the outgroup(6), or the entire state of Kansas(7).
+# Each list will have 11 named elements, the number reference the elements in the list:
+# [1] $gmdnum: int   1:7
+# [2] $mlogitcoeff: df with dim = (#cropcodes x 23) containing the coefficients and intercept terms from the multinomial logit model
+# [3] $mlogitmeans: df containing the mean for each of the variables run in the mlogit model
+# [4] $cropamts: df containing the mean acres planted to each of the 5 crop cover types for each cropcode
+# [5] $watercoeff: df containing the water withdrawal regression coefficients and intercept
+# [6] $wwdmeans: df containing the means for each of the variables in the water withdrawal regression
+# [7] $costcropacre: df dim=(1x5) containing the cost per acre of planting each of the 5 crops
+# [8] $cropprices: df dim=(5x1) containing the per unit prices of each of the crops
+# [9] $meanwater: num mean AF water in the region of interest
+# [10]$recharge: num recharge rate for the region of interest
+# [11]$watermax: num upper bound of domain for node space, max water observed in region.
+
+```
+
+Next we need to organize the data into a usable form. We want to take the raw regression
+results and organize them to focus on the groundwater depth or things that will be functions of
+groundwater depth like planting and water withdrawal choices.
+
+```{r}
+#----------------------------------------------------------------------------------------
+# Source "datasetup" function to process data from online github repository 
+#----------------------------------------------------------------------------------------
+source(paste0("https://github.com/efenichel/capn_stuff/raw/",gitbranch,"/data_setup.R"))
+
+```
+
+In the Global Environment you will now see a section for functions, with a function called
+“datasetup.” Click “datasetup” to view the function. There are three cases, they all do basically the same thing but have to run separately because of some dimensionality issues (case 1‐6 are subsets of the state of Kansas). Look through the notes in the first case.
+
+This next chunk creates a new object called gw.data. This object holds all the data needed to run the groundwater systems model.
+
+```{r}
+
+#----------------------------------------------------------------------------------------
+# Setup gwdata data
+#----------------------------------------------------------------------------------------
+# Select region,  1:5 are GMD, 6 is the outgroup, 7 is state
+# Set default region 
+default_region <- 7 
+
+# Un-comment the following line if you want to choose your region
+# region <- 1
+
+# After setting the region, create capn data structure
+# Checks if you set the region or if it will be the default which is 7 which is the whole state
+if (!exists("region")){region <- default_region} 
+
+#Load in region specific dataframe from ksdate object. Double brackets are an important notation for lists
+region_data <- ksdata[[region]] 
+
+#the dataset() function repackages parameters and means, see the datasetup code. 
+# the return is of the form: 
+# [[1]]: crop.coeff
+# [[2]]: crop.amts
+# [[3]]: alpha
+# [[4]]: beta
+# [[5]]: gamma
+# [[6]]: gamma1
+# [[7]]: gamma2
+# [[8]]: crop prices
+# [[9]]: cost.crop.acre
+
+gw.data <- datasetup(region)  # note there is option data setup dataset. Default is ksdata, but this can be changed.
+
+# Example: See the cost of crops by acre for our 5 crops
+gw.data[[9]]
+```
+
+The following lines set user defined variables such as the discount rate and recharge rate that will be used. They also set some parameters for the approximation that capn will use.
+
+```{r}
+#----------------------------------------------------------------------------------------
+# User specified parameters
+#----------------------------------------------------------------------------------------
+
+#Economic parameters
+dr <- 0.03 #discount rate
+
+#System parameters
+recharge <- region_data$recharge # units are inches per year constant rate, see line 82 
+#recharge <- 1.25 # uncomment to input your own for sensitivity analysis
+
+#capN parameters
+order <- 10 # approximation order
+NumNodes <- 100 # number of nodes
+wmax <- region_data$watermax # This sets the the upper bound on water amount to consider, see line 83
+```
+
+The next lines sources all the functions for the system model for Kansas groundwater. If you were doing your own project, you would need to create these functions for your system, just like you will need to collect your own data.
+
+```{r}
+#------------------------------------------------------------------------------------------
+# Source "system_fns" functions from online github repository 
+# These get the system model associated with Fenichel et al. 2016 and Addicott & Fenichel 2019
+#------------------------------------------------------------------------------------------
+
+# contains the functions for groundwater  system
+source(paste0("https://raw.githubusercontent.com/efenichel/capn_stuff/",gitbranch,"/system_fns.R")) 
+
+# Notice in the explore tab there are now a bunch of Functions.
+# You can click on any function and see the functions that support the system model.
+# These are the functions that you need to build and calibrate for your system.
+```
+
+Now we are truly ready to start using capn. Run lines 108 and 109 to set the approximation space and lay out a grid of approximation nodes.
+
+```{r}
+#------------------------------------------------------------------------------------------
+# Test Capn
+#------------------------------------------------------------------------------------------
+
+#prepare capN
+Aspace <- aproxdef(order,0,wmax,dr) #defines the approximation space
+nodes <- chebnodegen(NumNodes,0,wmax) #define the nodes
+
+```
+
+Loop through and create the matrix simuData that has columns nodes, change in stock (sdot), change in sdot with respect to s, change in profit with respect to s, and profit.
+
+```{r}
+#prepare for simulation
+simuData <- matrix(0,nrow = NumNodes, ncol = 5)
+
+#simulate at nodes
+for(j in 1:NumNodes){
+  simuData[j,1]<-nodes[j] #water depth nodes
+  simuData[j,2]<-sdot(nodes[j],recharge,gw.data) #change in stock over change in time
+  simuData[j,3]<- 0-WwdDs1(nodes[j],gw.data) # d(sdot)/ds, of the rate of change in the change of stock
+  simuData[j,4]<-ProfDs1(nodes[j],gw.data) #Change in profit with the change in stock
+  simuData[j,5]<-profit(nodes[j],gw.data) #profit
+}
+```
+
+Approximate the Chebyshev coefficients and save them as the object pC.
+
+```{r}
+#recover approximating coefficents
+pC<-paprox(Aspace, simuData[,1],simuData[,2],simuData[,3],simuData[,4])  #the approximated coefficent vector for prices
+```
+
+Use the Chebyshev coefficients to compute a shadow price, wealth =
+shadow price times quantity, the value function, stock, and profit for each node.
+
+```{r}
+#project shadow prices, value function, and inclusive wealth
+waterSim <- psim(pcoeff = pC,
+                 stock = simuData[,1],
+                 wval = simuData[,5],
+                 sdot = simuData[,2])
+#convert to data frame 
+waterSim <- as.data.frame(waterSim)
+```
+
+Plot the shadow price curve and check the results.
+
+```{r}
+#use ggplot to plot the water shadow price function  
+ggplot() + 
+  geom_line(data = waterSim, aes(x = stock, y = shadowp),
+            color = 'blue') +
+            labs( 
+            x= "Stored groundwater",
+            y = "Shadow price")  +
+            theme(  #http://ggplot2.tidyverse.org/reference/theme.html
+              axis.line = element_line(color = "black"), 
+              panel.background = element_rect(fill = "transparent",colour = NA),
+              plot.background = element_rect(fill = "transparent",colour = NA)
+            )
+cat("if everything runs well the next line should say 17.44581", "\n")
+cat("At 21.5 acre feet of water, the shadow price is" , psim(pC,21.5)$shadowp, "\n")
+```
+
+Plot the value function, using ggplot. If you have not used ggplot before
+take a minute to examine the syntax.
+
+```{r}
+# use ggplot plot the value function
+lrange <- 6 # the closest nodes to zero have some issues. 
+ggplot() + 
+  geom_line(data = waterSim[lrange :100,], aes(x = stock[lrange :100], y = vfun[lrange :100]),
+            # four rows are removed because they are two far outside the data
+            color = 'blue') +
+  xlim(0, 120) +
+  ylim(0, 2600) +
+  labs( 
+    x= "Stored groundwater",
+    y = "Intertemporial Welfare")  +
+  theme(  #http://ggplot2.tidyverse.org/reference/theme.html
+    axis.line = element_line(color = "black"), 
+    panel.background = element_rect(fill = "transparent",colour = NA),
+    plot.background = element_rect(fill = "transparent",colour = NA)
+  )
+
+cat("you may get an warning that some number or rows were removed from the plot. This is not important.", "\n")
+
+testme<-psim(pcoeff = pC, 
+             stock = c(18.5,21.5), 
+             wval = c(profit(18.5,gw.data),profit(21.5, gw.data)),
+             sdot = c(sdot(18.5, recharge, gw.data),sdot(21.5, recharge, gw.data))
+             )
+testme
+
+rm(j, testme)
+
+
+
+```
+
+You should see a price curve and intertemporal welfare curve. Run the following code or paste it in the console to verify the shadow price at 21.5 acre fee is about \$17 
+
+```{r}
+psim(pC,21.5)$shadowp
+```
+
+5. Once you have verified these piece click the brooms in the Global Environment and Viewer tabs to clear all results, or run the following code.
+
+```{r}
+rm(list = ls())
+```
+
+# Some Exercises
+
+**First, let’s explore the data and model (suggested weighting when used as a problem set, 20% equally weighted).** The simulation model is built on two statistical models: one for water withdrawal (a two‐ stage regression linear regression model that controls for selection bias) and one for crop mix (a multinomial logit model). The coefficients from these regressions are in the ksdata object, which as divided by region. We focus on “region 7,” which is a state level aggregation. This is saved in the object region_data. Recharge is considered constant, so the physical model is just recharge minus water withdrawal. However, capn can certainly use more complicated biophysical models. This is the section you will have to provide for you own natural asset valuation.
+
+
+
+
+
+
