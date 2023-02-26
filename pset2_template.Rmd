@@ -1,0 +1,32 @@
+---
+title: "Template for pset2"
+author: "Andie Creel"
+date: "2023-02-26"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Some Exercises 
+Note: The first step is to run all of the code in groundwater_capn.R so that we have the R objects that we need to work with. That is what the next line does. 
+
+```{r}
+source("groundwater_capn.R")
+```
+
+Question 2
+a.) 
+
+```{r}
+region_data['watercoeff']
+```
+
+insert the description of what you see here
+
+
+
+
+
+

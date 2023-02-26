@@ -117,7 +117,6 @@ In the Global Environment you will now see a section for functions, with a funct
 This next chunk creates a new object called gw.data. This object holds all the data needed to run the groundwater systems model.
 
 ```{r}
-
 #----------------------------------------------------------------------------------------
 # Setup gwdata data
 #----------------------------------------------------------------------------------------
