@@ -1,0 +1,618 @@
+---
+title: "Problem Set 2"
+author: "Andie Creel"
+date: "3/3/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Key 
+Part 1 (30 pts): 
+Q2 — 5: 
+Q3 — 5: 
+Q4 — 5: constant
+Q5 — 5: looking for data setup lines
+Q6 — 5:
+Q7 — 5: 
+
+Part 2 (145 pts)
+Q8 — 10:  (10 if they give intuition beyond observing relationship)
+Q9 — 10: (10 if they give intuition beyond observing relationship)
+Q10 — 10: 
+Q11 — 20: 
+Q13 — 10:  (5 if missing )
+Q14 — 5: (0 if missing) 
+Q17 — 10:  10 with intuition 
+Q18 — 10: 10 with intuition 
+Q19 — 10: (10 if they give any observation of changes)
+Q20 — 10: 
+Q21 — 10: 
+Q22 — 10: (8 if no answer about sustainability)
+Q23 — 20: (14 if isn’t opposite effect the tax) 
+
+
+
+# Set up provided by Eli
+
+```{r message=FALSE}
+source("groundwater_capn.R")
+```
+
+# Some exercises
+
+I call crop codes/well service areas (X1 - X999) field type, where field type determines a program for water extraction
+
+## Question 2
+
+```{r results=FALSE, part-1}
+region_data['watercoeff']
+```
+a) I see a list of differnt coefficents of water withdraw for different parameters in a model that may predict how much water is being removed given the field type
+
+
+```{r results=FALSE}
+region_data['mlogitcoeff']
+```
+
+b) I think each of these are probabilities of creating a fields type (where field type predicts the amount of water you'll use) given ~23 different state variables.
+
+## Question 3
+
+```{r results=F}
+region_data['wwdmeans']
+```
+
+a) The average state for 5 different water districts, the misfits (6) and the whole state
+
+```{r results=FALSE}
+region_data['mlogitmeans'] 
+```
+b) The average coefficent for all field types
+
+## Question 4 
+Alpha is the grand mean, similar to a fixed effect. It's similar to a fixed effect in that it's a constant outside of the economic program, but it's been predicted through a select number of characteristics (some of which are time varying, ie percipitation). The variables excluded are the variables that can be chosen in the economic program.
+
+## Question 5
+In the code in the data setup for the mlogit that does a similar task, these are the lines around 136 - 146.
+
+## Question 6
+a) The wwd function predicts the amount of water that will be withdrawn.
+
+```{r}
+Wwd(21.5, gw.data) #2.624582. 
+```
+
+b) If you the state of water is 21.5 feet, you will withdraw 2.62 units acre feet of water.
+
+```{r}
+data.ww <- matrix(0, nrow = 100, ncol = 2)
+colnames(data.ww) <- c("water", "water.withdrawal")
+for(j in 1:100){ 
+  data.ww[j,1] <- j
+  data.ww[j,2] <- Wwd(j,gw.data)
+}
+data.ww <- as.data.frame(data.ww)
+```
+
+c) The simulated dataframe tells us how much water you will withdraw when water feet is 1 though when water feet is 100
+
+d) 
+
+```{r}
+library(ggplot2)
+ggplot() +
+  geom_line(data = data.ww, aes(x = water, y = water.withdrawal),
+            color = 'blue') +
+  labs(
+    x= "Stored groundwater", y = "Water Withdrawal") +
+  theme( #http://ggplot2.tidyverse.org/reference/theme.html axis.line = element_line(color = "black"),
+    panel.background = element_rect(fill = "transparent",color = NA), plot.background = element_rect(fill = "transparent",color = NA)
+  )
+```
+
+## Question 7
+
+```{r}
+data.cs <- matrix(0, nrow = 100, ncol = 7)
+colnames(data.cs) <- c("water", "alfalfa", "corn", "sorghum", "soy", "wheat","fallow")
+
+for(j in 1:100){ 
+  data.cs[j,1] <- j
+  data.cs[j, 2:7] <- cropFwater(j,gw.data)
+}
+data.cs <- as.data.frame(data.cs)
+
+#getting total acres planted (but also including fallowed??)
+new.data.cs <- cbind(data.cs, total = rowSums(data.cs[,2:7])) #getting sums
+
+ggplot() +
+  geom_line(data = new.data.cs, aes(x = water, y = total),
+            color = 'blue') +
+  labs(
+    x= "Stored groundwater", y = "total acres planted") +
+  theme( #http://ggplot2.tidyverse.org/reference/theme.html axis.line = element_line(color = "black"),
+    panel.background = element_rect(fill = "transparent",color = NA), plot.background = element_rect(fill = "transparent",color = NA)
+  )
+
+```
+
+What's planted when water depth is 100
+
+```{r}
+my.pie<- data.frame(
+  crops = c("alfalfa", "corn", "sorghum", "soy", "wheat","fallow"), fracs = cropFwater(100 ,gw.data)
+)
+
+ggplot(my.pie, aes(x = factor(1), y=fracs, fill=factor(crops)) )+ geom_bar(width = 1,stat="identity")+coord_polar(theta = "y") + labs(
+  x= "",
+  y = "") +
+  theme(axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        panel.background = element_rect(fill = "transparent",color = NA), plot.background = element_rect(fill = "transparent",color = NA) )+
+  guides(fill=guide_legend(title="crop fractions"))
+```
+
+What's planted when water depth is 20
+
+```{r}
+my.pie<- data.frame(
+  crops = c("alfalfa", "corn", "sorghum", "soy", "wheat","fallow"), fracs = cropFwater(20 ,gw.data)
+)
+
+ggplot(my.pie, aes(x = factor(1), y=fracs, fill=factor(crops)) )+ geom_bar(width = 1,stat="identity")+coord_polar(theta = "y") + labs(
+  x= "",
+  y = "") +
+  theme(axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        panel.background = element_rect(fill = "transparent",color = NA), plot.background = element_rect(fill = "transparent",color = NA) )+
+  guides(fill=guide_legend(title="crop fractions"))
+
+```
+
+d) cropFwater(x,) needs to be changed 
+
+# capn (80%)
+
+```{r echo = F, results='hide', part-2}
+######################################################################################
+# This script is a demo for the capn package that reproduces results from applications 
+# to groundwater in Kansas. 
+# Date: 11/07/2019
+# References: Fenichel et al. (2016) PNAS and Addicott & Fenichel (2019) JEEM
+######################################################################################
+
+library(capn)
+#?paprox: returns a price approximation based on the approximation space, stock, time and some numeraire value
+#?psim: Provides confidence intervals on the price based on stock and how the stock and numeraire change over time
+
+
+#load required packages
+if (!require("pacman")) install.packages("pacman") #pacman allows you to use the p_load function
+#the p_load function checks is a library is installed, if not it installs it, then it attaches the 
+#called library
+p_load(capn, ggplot2, repmis)
+#capn documentation: https://cran.r-project.org/web/packages/capn/capn.pdf 
+#https://www.rdocumentation.org/packages/repmis/versions/0.5 
+#ggplot2 is a plotting package. 
+
+rm(list=ls()) #clear workspace
+## troubleshooting branch
+gitbranch <- "master"
+
+#----------------------------------------------------------------------------------------
+# Get data from Github
+
+#get data set for the problem set from Github
+#This demo now uses data from Addicott adn Fenichel 2019 JEEM rather than the orginal data from
+#Fenichel et al. 2016 PNAS.  The is allows spatial disaggregration.  The change in data does lead
+#to slightly different results because of additional data cleaning.  Both results at the state-wide
+#level lead to shadow price for of the mean acre foot of water of ~$17. 
+
+#One advantage of this, is we now provide code to process the raw regression results and 
+#raw summary statistics. 
+
+
+source_data(paste0("https://github.com/efenichel/capn_stuff/raw/",gitbranch,"/KSwater_data.RData")) #Rdata file upload
+ksdata <- KSwater_data #save KSwater_data as ksdata 
+rm(KSwater_data) #this removes the redundant data set. 
+
+## STRUCTURE of ksdata 
+#The object ksdata is a list of 7 lists. Each of the 7 lists corresponds to a groundwater management district (1-5), 
+# the outgroup(6), or the entire state of Kansas(7).
+# Each list will have 11 named elements, the number reference the elements in the list:
+# [1] $gmdnum: int   1:7
+# [2] $mlogitcoeff: df with dim = (#cropcodes x 23) containing the coefficients and intercept terms from the multinomial logit model
+# [3] $mlogitmeans: df containing the mean for each of the variables run in the mlogit model
+# [4] $cropamts: df containing the mean acres planted to each of the 5 crop cover types for each cropcode
+# [5] $watercoeff: df containing the water withdrawal regression coefficients and intercept
+# [6] $wwdmeans: df containing the means for each of the variables in the water withdrawal regression
+# [7] $costcropacre: df dim=(1x5) containing the cost per acre of planting each of the 5 crops
+# [8] $cropprices: df dim=(5x1) containing the per unit prices of each of the crops
+# [9] $meanwater: num mean AF water in the region of interest
+# [10]$recharge: num recharge rate for the region of interest
+# [11]$watermax: num upper bound of domain for node space, max water observed in region.
+
+#----------------------------------------------------------------------------------------
+# Get "datasetup" function to process data 
+source(paste0("https://github.com/efenichel/capn_stuff/raw/",gitbranch,"/data_setup.R"))
+
+
+#------------------------------------------------------------------------------------------
+# Get the system model associated with Fenichel et al. 2016 and Addicott & Fenichel 2019
+# First load the functions 
+source('system_fns.R')  
+#source a separate script from github that contains the functions for gw system
+source(paste0("https://raw.githubusercontent.com/efenichel/capn_stuff/",gitbranch,"/system_fns.R")) #will need to fix in the end
+
+#notice in the explore tab there are now a bunch of Functions.
+#you can click on any function and see the functions that support the system model.
+#These are the functions that you need to build and calibrate for your system.
+
+# Setup gwdata data ------------------------------------------------------------------------------
+#region <- 1 # Select region,  1:5 are GMD, 6 is the outgroup, 7 is state
+#set the region
+my.region <- 7
+
+# After setting the region, create capn data structure
+if (!exists("region")){region <- my.region} #default to state
+region_data <- ksdata[[region]] #double-brackets here important. Load in region specific data
+gw.data <- datasetup(region)  #note there is option data setup dataset. Default is ksdata, but this can be changed.
+#the gw.data data repackages parameters and means, see the datasetup code. 
+# the return is of the form 
+#list(crop.coeff, crop.amts, alpha, beta, gamma, gamma1, gamma2, crop.prices, cost.crop.acre)
+#---------------------------------------------------------------------------------------------
+
+#I wrote the myWaterSim functin so that I could change the discount rate and halve the recharge quickly
+source("https://raw.githubusercontent.com/a5creel/myWaterSim/main/myWaterSim.R")
+
+
+# capn Problem Set Questions -----------------------------
+myWaterSim()
+#tests
+cat("This line is hardcoded with the default: if discount rate is dr = .03 and feet = 21.5 the price is 17.44581", "\n")
+cat("test myWaterSim output: If the discount rate is the default of 0.03, the stock is the default of 21.5, then the following price should be the same as above. p = ", myWaterSim()$shadowp)
+```
+
+## Question 8
+
+```{r echo=F}
+
+# Question 8
+cat("Question 8: stock = 21.5, experimenting with discount rate:", 
+    "\n dr = 0.03, p =  ", myWaterSim(myDiscountRate = 0.03)$shadowp, 
+    "\n dr = 0.05, p =  ", myWaterSim(myDiscountRate = 0.05)$shadowp,
+    "\n dr = 0.07, p =  ", myWaterSim(myDiscountRate = 0.07)$shadowp)
+
+cat("Question 8: stock = 18, experimenting with discount rate:", 
+    "\n dr = 0.03, p =  ", myWaterSim(myDiscountRate = 0.03, myStock = 18)$shadowp, 
+    "\n dr = 0.05, p =  ", myWaterSim(myDiscountRate = 0.05, myStock = 18)$shadowp,
+    "\n dr = 0.07, p =  ", myWaterSim(myDiscountRate = 0.07, myStock = 18)$shadowp)
+
+```
+
+When the discount rate is low, the shadow price is higher because we're discouning the future value less. When the stock is lower, the shadow price is higher because the resouce is more scarce
+
+## Question 9
+
+```{r echo=FALSE}
+
+cat("Question 9: stock = 21.5, experimenting with recharge rate:", 
+    "\n half recharge rate, p =  ", myWaterSim(myRechargeMultiplier = 0.5)$shadowp,
+    "\n default recharge rate, p =  ", myWaterSim()$shadowp, 
+    "\n double recharge rate, p =  ", myWaterSim(myRechargeMultiplier = 2)$shadowp,
+    "\n five time recharge rate, p =  ", myWaterSim(myRechargeMultiplier = 5)$shadowp)
+
+cat("Question 9: stock = 18, experimenting with recharge rate:", 
+    "\n half recharge rate, p =  ", myWaterSim(myRechargeMultiplier = 0.5, myStock = 18)$shadowp,
+    "\n default recharge rate, p =  ", myWaterSim(myRechargeMultiplier = 1, myStock = 18)$shadowp, 
+    "\n double recharge rate, p =  ", myWaterSim(myRechargeMultiplier = 2, myStock = 18)$shadowp,
+    "\n five time recharge rate, p =  ", myWaterSim(myRechargeMultiplier = 5, myStock = 18)$shadowp)
+
+cat("Question 9: stock = 18, experimenting with recharge rate:", 
+    "\n half recharge rate, p =  ", myWaterSim(myRechargeMultiplier = 0.5, myStock = 30)$shadowp,
+    "\n default recharge rate, p =  ", myWaterSim(myRechargeMultiplier = 1, myStock = 30)$shadowp, 
+    "\n double recharge rate, p =  ", myWaterSim(myRechargeMultiplier = 2, myStock = 30)$shadowp,
+    "\n five time recharge rate, p =  ", myWaterSim(myRechargeMultiplier = 5, myStock = 30)$shadowp)
+
+```
+
+Regardless of stock level, the faster the recharge rate the cheaper the shadow price of water. This makes sense. The faster the recharge rate, the less scarce water is (and non-scarce resources are cheaper).
+
+## Question 10
+
+```{r echo=FALSE}
+
+cat("Questions 10, show that inclusive wealth is stock times the shadow price (calculated with default values):",
+    "\n output$iw = ", myWaterSim()$iw,
+    "\n output$shadowp * output$stock = ", myWaterSim()$shadowp * myWaterSim()$stock)
+```
+
+## Question 11
+
+
+```{r echo=FALSE}
+
+# use ggplot plot the value function
+#prepare capN
+Aspace <- aproxdef(10,0,region_data[['watermax']],0.03) #defines the approximation space
+nodes <- chebnodegen(100,0,region_data[['watermax']]) #define the nodes
+
+#prepare for simulation
+simuData <- matrix(0,nrow = 100, ncol = 5)
+
+#simulate at nodes
+for(j in 1:100){
+  simuData[j,1]<-nodes[j] #water depth nodes
+  simuData[j,2]<-sdot(nodes[j],region_data[['recharge']],gw.data) #change in stock over change in time
+  simuData[j,3]<- 0-WwdDs1(nodes[j],gw.data) # d(sdot)/ds, of the rate of change in the change of stock
+  simuData[j,4]<-ProfDs1(nodes[j],gw.data) #Change in profit with the change in stock
+  simuData[j,5]<-profit(nodes[j],gw.data) #profit
+}
+
+#recover approximating coefficents
+pC<-paprox(Aspace, simuData[,1],simuData[,2],simuData[,3],simuData[,4])  #the approximated coefficent vector for prices
+
+#project shadow prices, value function, and inclusive wealth
+waterSim <- psim(pcoeff = pC,
+                 stock = simuData[,1],
+                 wval = simuData[,5],
+                 sdot = simuData[,2])
+#convert to data frame 
+waterSim <- as.data.frame(waterSim)
+
+lrange <- 6 # the closest nodes to zero have some issues. 
+#use ggplot to plot the water shadow price function  
+```
+
+a) I have plotted the intertemporal welfare on stored groundwater
+
+```{r}
+ggplot() + 
+  geom_line(data = waterSim[lrange :100,], aes(x = stock[lrange :100], y = vfun[lrange :100]),
+            # four rows are removed because they are two far outside the data
+            color = 'blue') +
+  xlim(0, 120) +
+  ylim(0, 2600) +
+  labs( 
+    x= "Stored groundwater",
+    y = "Intertemporial Welfare")  +
+  theme(  #http://ggplot2.tidyverse.org/reference/theme.html
+    axis.line = element_line(color = "black"), 
+    panel.background = element_rect(fill = "transparent",colour = NA),
+    plot.background = element_rect(fill = "transparent",colour = NA)
+  )
+```
+
+b)  It is possbile to subtract one iw from another, but this is not the best approximation for price curves that are not perfectly elastic. For instance, I can subtract the iw for a stock of 21.5 from a stock of 20.5 and I get: 
+
+```{r}
+cat(myWaterSim(myStock = 21.5)$iw - myWaterSim(myStock = 20.5)$iw)
+```
+
+Additionally, I can subtract the iw for a stock of 21.5 from a stock of 18.5 and I get: 
+
+```{r}
+cat(myWaterSim(myStock = 21.5)$iw - myWaterSim(myStock = 18.5)$iw)
+```
+
+c) A more accurate way to compute the change in IW is to find the average price at the two different stock levels, and then multiplying that number by the change in stock
+```{r}
+#21.5 to 20.5 feet
+myAvgP <- (myWaterSim(myStock = 21.5)$shadowp + myWaterSim(myStock = 20.5)$shadowp) /2
+myChangeStock <- 21.5 -20.5
+```
+
+The change in IW for a change stock from 21.5 to 20.5 would be: `r myAvgP * myChangeStock`, where the average price is `r myAvgP` and the change in stock is `r myChangeStock`.
+
+```{r}
+#21.5 to 18.5
+myAvgP <- (myWaterSim(myStock = 21.5)$shadowp + myWaterSim(myStock = 18.5)$shadowp) /2
+myChangeStock <- 21.5 -18.5
+
+```
+The change in IW for a change stock from 21.5 to 18.5 would be: `r myAvgP * myChangeStock`, where the average price is `r myAvgP` and the change in stock is `r myChangeStock`.
+
+Using the first approach (subtracting IWs from each out) seems to underestimate the loss of wealth we calculate using the average price approach
+
+d) total value under whole curve
+```{r}
+myWaterSim(myQuest11 = TRUE)$vfun
+```
+
+e) Difference between vfun at 21.5 ft and 18.5 feet:
+
+```{r}
+cat(myWaterSim(myStock = 21.5, myQuest11 = TRUE)$vfun
+- myWaterSim(myStock = 18.5, myQuest11 = TRUE)$vfun)
+```
+
+The vfun approach is lower than either of the previous approches, likely because of the price curves shape.
+
+
+f) I haven't drawn a picture, but the picture I would draw it the one in Eli's slides (difference on boxes vs. the integral vs. the average price approach)
+
+# Tax 
+
+## Question 12
+
+```{r, tax}
+ksdata.alt <- ksdata
+```
+
+## Question 13
+
+```{r}
+cat("\n Question 13: The original price of corn was", ksdata.alt$State$mlogitmeans[14,2], "we're now setting it to",  0.9*ksdata.alt$State$mlogitmeans[14,2])
+
+ksdata.alt$State$mlogitmeans[14,2] <- 0.9*ksdata.alt$State$mlogitmeans[14,2]
+```
+
+## Question 14
+
+```{r}
+cat("Question 14: price of wheat", ksdata.alt$State$mlogitmeans[17,2])
+```
+
+## Question 15
+I am not running this line again b/c we already did in Q13
+
+## Question 16
+
+```{r}
+gw.data.alt <- datasetup(region, dataset = ksdata.alt)
+```
+
+## Question 17
+
+```{r}
+cat("Question 17: Without the tax, water withdraw at 21.5 feet was", Wwd(21.5, gw.data), "\n With the tax, water withdraw at 21.5 feet is",  Wwd(21.5, gw.data.alt), "so slightly less!")
+```
+
+## Question 18
+
+```{r}
+cat("Question 18: Prior to the tax,", sum(cropFwater(21.5,gw.data)), "acres were planted", 
+    "\n After the tax,", sum(cropFwater(21.5,gw.data.alt)),  "acres were planted, so slightly less!")
+```
+
+## Question 19
+
+```{r}
+#without tax
+my.pie<- data.frame(
+  crops = c("alfalfa", "corn", "sorghum", "soy", "wheat","fallow"), fracs = cropFwater(21.5 ,gw.data)
+)
+ggplot(my.pie, aes(x = factor(1), y=fracs, fill=factor(crops)) )+ geom_bar(width = 1,stat="identity")+coord_polar(theta = "y") + labs(
+  x= "",
+  y = "") +
+  theme(axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        panel.background = element_rect(fill = "transparent",color = NA), plot.background = element_rect(fill = "transparent",color = NA) )+
+  guides(fill=guide_legend(title="crop fractions")) +
+ggtitle("Without Tax")
+
+
+#with tax
+my.pie<- data.frame(
+  crops = c("alfalfa", "corn", "sorghum", "soy", "wheat","fallow"), fracs = cropFwater(21.5 ,gw.data.alt)
+)
+
+ggplot(my.pie, aes(x = factor(1), y=fracs, fill=factor(crops)) )+ geom_bar(width = 1,stat="identity")+coord_polar(theta = "y") + labs(
+  x= "",
+  y = "") +
+  theme(axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        panel.background = element_rect(fill = "transparent",color = NA), plot.background = element_rect(fill = "transparent",color = NA) )+
+  guides(fill=guide_legend(title="crop fractions")) + ggtitle("With Tax")
+```
+
+There is a slight change in crops (note sorghum)
+
+## Question 20 
+
+```{r}
+cat("Prior to the tax, profit was: ", profit(21.5, gw.data), 
+    "\n After the tax, profit was:", profit(21.5, gw.data.alt), 
+    "\n Profit decreases.")
+```
+
+## Question 21
+
+```{r}
+cat("Prior to the tax, the shadow price was: ", myWaterSim(myGW.data = gw.data)$shadowp, 
+    "\n After the tax, the shadow price was: ", myWaterSim(myGW.data = gw.data.alt)$shadowp,
+    "\n How exciting, the price increased!")
+```
+
+## Question 22
+
+```{r}
+cat("Prior to the tax, inclusive wealth was: ", myWaterSim(myGW.data = gw.data)$iw, 
+    "\n After the tax, inclusive wealth was: ", myWaterSim(myGW.data = gw.data.alt)$iw,
+    "\n The tax increases inclusive wealth and therfore is accomplishing sustainability goals!!")
+
+```
+
+
+# Subsidy on wheat
+
+```{r echo=FALSE, subsity}
+#Question 16
+cat("Question 12: I set the data alt")
+ksdata.alt <- ksdata
+
+#Question 13
+cat("\n Question 13: The original price of wheat was", ksdata.alt$State$mlogitmeans[17,2], "we're now setting it to",  1.1*ksdata.alt$State$mlogitmeans[17,2])
+
+ksdata.alt$State$mlogitmeans[17,2] <- 1.1*ksdata.alt$State$mlogitmeans[17,2]
+
+
+cat("I ran datasetup")
+gw.data.alt <- datasetup(region, dataset = ksdata.alt)
+
+#Question 17
+cat("Question 17: Without the subsidy, water withdraw at 21.5 feet was", Wwd(21.5, gw.data), "\n With the subsidy, water withdraw at 21.5 feet is",  Wwd(21.5, gw.data.alt), "so slightly more!")
+
+#Question 18
+cat("Question 18: Prior to the subsidy,", sum(cropFwater(21.5,gw.data)), "acres were planted", 
+    "\n After the subsidy,", sum(cropFwater(21.5,gw.data.alt)),  "acres were planted, so slightly more!")
+
+# Question 19 ----------------
+cat("Question 19: ")
+
+#without subsidy
+my.pie<- data.frame(
+  crops = c("alfalfa", "corn", "sorghum", "soy", "wheat","fallow"), fracs = cropFwater(21.5 ,gw.data)
+)
+ggplot(my.pie, aes(x = factor(1), y=fracs, fill=factor(crops)) )+ geom_bar(width = 1,stat="identity")+coord_polar(theta = "y") + labs(
+  x= "",
+  y = "") +
+  theme(axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        panel.background = element_rect(fill = "transparent",color = NA), plot.background = element_rect(fill = "transparent",color = NA) )+
+  guides(fill=guide_legend(title="crop fractions")) +
+ggtitle("Without subsidy")
+
+
+#with subsidy
+my.pie<- data.frame(
+  crops = c("alfalfa", "corn", "sorghum", "soy", "wheat","fallow"), fracs = cropFwater(21.5 ,gw.data.alt)
+)
+
+ggplot(my.pie, aes(x = factor(1), y=fracs, fill=factor(crops)) )+ geom_bar(width = 1,stat="identity")+coord_polar(theta = "y") + labs(
+  x= "",
+  y = "") +
+  theme(axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        axis.text = element_blank(),
+        panel.background = element_rect(fill = "transparent",color = NA), plot.background = element_rect(fill = "transparent",color = NA) )+
+  guides(fill=guide_legend(title="crop fractions")) + ggtitle("With subsidy")
+
+cat("There is a slight change in crops (note corn)")
+
+#Question 20 
+cat("Question 20: Prior to the subsidy, profit was: ", profit(21.5, gw.data), 
+    "\n After the subsidy, profit was:", profit(21.5, gw.data.alt), 
+    "\n Profit increases")
+
+#Question 21
+cat("Question 21: Prior to the subsidy, the shadow price was: ", myWaterSim(myGW.data = gw.data)$shadowp, 
+    "\n After the subsidy, the shadow price was: ", myWaterSim(myGW.data = gw.data.alt)$shadowp,
+    "\n Oh no... the price decreased!")
+
+#Question 22
+cat("Question 22: Prior to the subsidy, intertemporal wealth was: ", myWaterSim(myGW.data = gw.data)$iw, 
+    "\n After the subsidy, inclusive wealth was: ", myWaterSim(myGW.data = gw.data.alt)$iw,
+    "\n The subsidy decreases intertemporal wealth and therfore is undermining sustainability  :(((")
+
+```
+
+
