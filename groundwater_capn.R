@@ -9,6 +9,13 @@
 if (!require("pacman")) install.packages("pacman") #pacman allows you to use the p_load function
 #the p_load function checks is a library is installed, if not it installs it, then it attaches the 
 #called library
+
+
+#Because of an email mess-up it looks like capn has been removed from CRAN (Jan 2026). 
+#The next two lines of code will let you install it from Eli Fenichel's Github page. 
+p_load(remotes)
+remotes::install_github('https://github.com/efenichel/capn_dev')
+
 p_load(capn, ggplot2, repmis)
 #capn documentation: https://cran.r-project.org/web/packages/capn/capn.pdf 
 #https://www.rdocumentation.org/packages/repmis/versions/0.5 
