@@ -14,4 +14,5 @@ Maher, S.M.L., E. P. Fenichel, O. J. Schmitz, and Adamowicz W.L. 2020. "The Econ
 https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/eap.2132 
 can be found in https://github.com/efenichel/caribou or https://github.com/sammaher2/caribou 
 This is a good example for a multi-stock application. 
- 
+
+ The capn code is now being maintained on https://github.com/ysd2004/capn. 
